@@ -1,4 +1,30 @@
 ---
+/**
+ * Chart.jsを使ってバーンアップチャートを作成する
+ * - 元になるデータ
+ *   - 以下のようなJSON形式
+ *     ```
+ *     [
+ *       {
+ *         "id": 1,
+ *         "title": "Issue 1",
+ *         "description": "Issue 1 description",
+ *         "status": "todo",
+ *         "assignee": "John Doe",
+ *         "created": "2023-06-01",
+ *         "closed": null
+ *       }
+ *     ]
+ *     ```
+ *   - 以下からダウンロードする
+ *     - https://raw.githubusercontent.com/dzeyelid/github-copilot-playground/main/sample/chart/issues.json
+ * - チャートの期間は、2023/6/16から2023/6/30までとする
+ * - y軸
+ *   - 最大値はアイテムの個数とする
+ *   - 日付におけるclosedの累計の個数を示す
+ * - x軸
+ *   - 日付を示す  
+*/
 ---
 
 <html lang="en">
@@ -11,5 +37,65 @@
   </head>
   <body>
     <h1>Astro</h1>
+    <!-- チャートを描画する -->
+    <canvas id="chart"></canvas>
+    <script>
+      import Chart from 'chart.js/auto'
+      import { add, compareAsc, format, isSameDay } from 'date-fns'
+    
+      // データを取得する
+      const response = await fetch('https://raw.githubusercontent.com/dzeyelid/github-copilot-playground/main/sample/chart/issues.json')
+      const data = await response.json()
+
+      // チャートの期間を設定する
+      const startDate = new Date('2023-06-16')
+      const endDate = new Date('2023-06-30')
+      // 期間中、日毎に、開始時点からその日までのclosedの累計を算出する
+      // {
+      //    date: string,
+      //    count: number
+      // }
+      const chartData = []
+      for (let date = startDate; compareAsc(date, endDate) <= 0; date = add(date, { days: 1 })) {
+        const count = data.filter(item => {
+          if (item.closed === null) {
+            return false
+          }
+          const closedDate = new Date(item.closed)
+          return isSameDay(date, closedDate) || compareAsc(date, closedDate) > 0
+        }).length
+        chartData.push({
+          date: format(date, 'yyyy-MM-dd'),
+          count
+        })
+      }
+
+      // バーンアップチャートを描画する
+      const ctx = document.getElementById('chart').getContext('2d')
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: chartData.map(item => item.date),
+          datasets: [
+            {
+              label: 'closed',
+              data: chartData.map(item => item.count),
+              backgroundColor: 'rgba(255, 99, 132, 0.2)',
+              borderColor: 'rgb(255, 99, 132)',
+              borderWidth: 1
+            }
+          ]
+        },
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: data.length
+            }
+          }
+        }
+      })
+    </script>
+
   </body>
 </html>

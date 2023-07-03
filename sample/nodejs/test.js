@@ -1,16 +1,15 @@
 const addTwoTimes = require('./main.js')
 
-// addTwoTimesのテストをする
-const testAddTwoTimes = () => {
-  const time1 = '24:00:01';
-  const time2 = '00:59:59';
-  const expected = '25:00:00';
-  const actual = addTwoTimes(time1, time2);
+const runTest = (input, expected) => {
+  const actual = target(input);
   if (actual !== expected) {
-    console.log('NG');
-  } else {
-    console.log('OK');
+    throw new Error(`Test failed! expected: ${expected}, actual: ${actual}`);
   }
 }
 
-testAddTwoTimes()
+runTest('apple', 'りんごは赤い');
+runTest('banana', 'バナナは黄色い');
+runTest('orange', 'オレンジはオレンジ色');
+runTest('melon', 'そのフルーツはわかりません...');
+console.log('Test OK!');
+
