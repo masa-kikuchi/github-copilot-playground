@@ -43,58 +43,53 @@
       import Chart from 'chart.js/auto'
       import { add, compareAsc, format, isSameDay } from 'date-fns'
     
-      // データを取得する
-      const response = await fetch('https://raw.githubusercontent.com/dzeyelid/github-copilot-playground/main/sample/chart/issues.json')
-      const data = await response.json()
+    // データを取得する
+    const data = await fetch('https://raw.githubusercontent.com/dzeyelid/github-copilot-playground/main/sample/chart/issues.json')
+    const issues = await data.json() 
 
       // チャートの期間を設定する
       const startDate = new Date('2023-06-16')
       const endDate = new Date('2023-06-30')
-      // 期間中、日毎に、開始時点からその日までのclosedの累計を算出する
-      // {
-      //    date: string,
-      //    count: number
-      // }
-      const chartData = []
-      for (let date = startDate; compareAsc(date, endDate) <= 0; date = add(date, { days: 1 })) {
-        const count = data.filter(item => {
-          if (item.closed === null) {
-            return false
-          }
-          const closedDate = new Date(item.closed)
-          return isSameDay(date, closedDate) || compareAsc(date, closedDate) > 0
-        }).length
-        chartData.push({
-          date: format(date, 'yyyy-MM-dd'),
-          count
-        })
-      }
 
-      // バーンアップチャートを描画する
-      const ctx = document.getElementById('chart').getContext('2d')
-      new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: chartData.map(item => item.date),
-          datasets: [
-            {
-              label: 'closed',
-              data: chartData.map(item => item.count),
-              backgroundColor: 'rgba(255, 99, 132, 0.2)',
-              borderColor: 'rgb(255, 99, 132)',
-              borderWidth: 1
-            }
-          ]
+      // 期間中、日毎に、開始時点からその日までのclosedの累計を算出する
+  // {
+  //    date: string,
+  //    count: number
+  // }
+
+    // バーンアップチャートを描画する
+    const ctx = document.getElementById('chart')
+    const chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: dates.map((date) => format(date, 'yyyy/MM/dd')),
+        datasets: [
+          {
+            label: 'Closed',
+            data: dates.map((date) => {
+              const count = issues.filter((issue) => {
+                if (issue.closed === null) {
+                  return false
+                }
+                return isSameDay(new Date(issue.closed), date)
+              }).length
+              return count
+            }),
+            borderColor: 'rgb(255, 99, 132)',
+            backgroundColor: 'rgba(255, 99, 132, 0.5)',
+            tension: 0.1,
+          },
+        ],
+      },
+      options: {
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: issues.length,
+          },
         },
-        options: {
-          scales: {
-            y: {
-              beginAtZero: true,
-              max: data.length
-            }
-          }
-        }
-      })
+      },
+    })
     </script>
 
   </body>
